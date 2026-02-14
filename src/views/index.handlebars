@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Polymarket Bot Dashboard</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --success: #22c55e;
+            --danger: #ef4444;
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        .stat-label { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #334155;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 1rem 1.5rem; color: var(--text-muted); border-bottom: 1px solid #334155; }
+        td { padding: 1rem 1.5rem; border-bottom: 1px solid #334155; }
+        .price-pos { color: var(--success); }
+        .price-neg { color: var(--danger); }
+        .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .badge-sim { background: #334155; color: #cbd5e1; }
+        .badge-live { background: #fee2e2; color: #991b1b; }
+        .refresh-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .refresh-btn:hover { opacity: 0.9; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Auto-reload script -->
+    <script>
+        setTimeout(() => window.location.reload(), 30000); // 30s auto-refresh
+    </script>
+</head>
+<body>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Доступно (Cash)</div>
+        <div class="stat-value">{{stats.currentBalance}} USDC</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">В ставках (Invested)</div>
+        <div class="stat-value" style="color: #cbd5e1">{{stats.invested}} USDC</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Общий Капитал</div>
+        <div class="stat-value" style="color: #fbbf24">{{stats.equity}} USDC</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Профит/Лосс</div>
+        <div class="stat-value {{#if stats.isPositive}}price-pos{{else}}price-neg{{/if}}">{{stats.pnl}}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Динамика Капитала (Equity)</div>
+    <div style="height: 300px; padding: 1rem;">
+        <canvas id="equityChart"></canvas>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Последние сделки
+        <button class="refresh-btn" onclick="window.location.reload()">Обновить</button>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Время</th>
+                <th>Рынок</th>
+                <th>Тип</th>
+                <th>Сумма</th>
+                <th>Цена</th>
+                <th>Режим</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each trades}}
+            <tr>
+                <td style="color: var(--text-muted)">{{this.time}}</td>
+                <td style="font-weight: 600">{{this.title}}</td>
+                <td>
+                    <span class="{{#if this.isBuyYes}}price-pos{{else}}price-neg{{/if}}">
+                        {{this.type}}
+                    </span>
+                </td>
+                <td>{{this.amount}} USDC</td>
+                <td>{{this.price}}</td>
+                <td>
+                    <span class="badge {{#if this.simulation}}badge-sim{{else}}badge-live{{/if}}">
+                        {{#if this.simulation}}SIM{{else}}LIVE{{/if}}
+                    </span>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function loadChart() {
+        try {
+            const resp = await fetch('/api/stats');
+            const data = await resp.json();
+            const history = data.history;
+            
+            const ctx = document.getElementById('equityChart').getContext('2d');
+            
+            // Prepare Data
+            const labels = history.map(pt => new Date(pt.x).toLocaleTimeString());
+            const equityData = history.map(pt => pt.y);
+            const cashData = history.map(pt => pt.cash);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Equity (Капитал)',
+                            data: equityData,
+                            borderColor: '#fbbf24',
+                            backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Cash (Доступно)',
+                            data: cashData,
+                            borderColor: '#3b82f6',
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#94a3b8' } }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Chart load failed:", e);
+        }
+    }
+    loadChart();
+</script>
+
+</body>
+</html>

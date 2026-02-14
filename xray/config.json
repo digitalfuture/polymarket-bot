@@ -1,0 +1,59 @@
+{
+  "log": {
+    "loglevel": "warning"
+  },
+  "inbounds": [
+    {
+      "port": 10808,
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      }
+    },
+    {
+      "listen": "127.0.0.1",
+      "port": 10809,
+      "protocol": "http",
+      "settings": {}
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "167.235.201.128",
+            "port": 443,
+            "users": [
+              {
+                "id": "2918ca35-5041-4957-8d5e-5e10857f6b19",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "chrome",
+          "serverName": "yastatic.net",
+          "publicKey": "wTC6k86Sy8CtPYuReh2kREwB4weXzN496Dqg9jfVunU",
+          "shortId": "44e8d899c9301cd7",
+          "spiderX": ""
+        },
+        "xhttpSettings": {
+          "mode": "auto",
+          "path": "/"
+        }
+      }
+    },
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    }
+  ]
+}
