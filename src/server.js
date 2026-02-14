@@ -28,18 +28,28 @@ const getStats = () => {
     const initialBalance = parseFloat(process.env.INITIAL_BALANCE || '100');
     
     // Calculate Equity History
-    let runningCash = initialBalance;
     let runningInvested = 0;
+    
     const history = trades.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).map(t => {
         const amount = parseFloat(t.amount || 0);
+        
+        // If we have the saved post-trade balance, use it. Otherwise fallback to calc.
+        let cash = parseFloat(t.currentBalance);
+        if (isNaN(cash)) {
+             // Fallback logic if currentBalance wasn't saved (older version)
+             // We can't easily recover exact state without full replay, 
+             // so we might see artifacts. But for new trades it will work.
+             cash = initialBalance; // This is a weak fallback, but better than negative infinity
+        }
+
         if (t.type && t.type.includes('BUY')) {
-            runningCash -= amount;
             runningInvested += amount;
         }
+        
         return {
             x: t.timestamp,
-            y: (runningCash + runningInvested).toFixed(2),
-            cash: runningCash.toFixed(2),
+            y: (cash + runningInvested).toFixed(2),
+            cash: cash.toFixed(2),
             invested: runningInvested.toFixed(2)
         };
     });
