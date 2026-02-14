@@ -49,7 +49,7 @@ async function runIteration() {
             const maxPct = parseFloat(process.env.MAX_POSITION_SIZE || '0.015');
             const positionSize = risk.balance * maxPct;
 
-            if (risk.canTrade(positionSize)) {
+            if (risk.canTrade(positionSize, market.id)) {
                 if (SIMULATION_MODE) {
                     console.log(chalk.yellow(`[SIMULATION] Executing ${result.recommendation} on "${market.title}" for ${positionSize.toFixed(2)} USDC`));
                     

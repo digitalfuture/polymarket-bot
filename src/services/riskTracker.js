@@ -72,12 +72,18 @@ export class RiskTracker {
         this.logToCsv(-trade.amount, trade.simulation ? 'SIM_TRADE' : 'LIVE_TRADE');
     }
 
-    canTrade(amount) {
-        // "Survival" check: Never spend more than configured % of remaining balance (default 10%)
+    canTrade(amount, marketId = null) {
+        // 1. Prevent multiple positions on the same market
+        if (marketId && this.hasPosition(marketId)) {
+            console.log(chalk.gray(`  - Already have a position in market ${marketId}. Skipping.`));
+            return false;
+        }
+
+        // 2. "Survival" check: Never spend more than configured % of remaining balance (default 10%)
         const maxPct = parseFloat(process.env.MAX_POSITION_SIZE || '0.1');
         const maxSpend = this.balance * maxPct;
         if (amount > maxSpend) {
-            console.log(chalk.red(`Trade risk too high: ${amount.toFixed(2)} > ${maxSpend.toFixed(2)} (10% of balance)`));
+            console.log(chalk.red(`Trade risk too high: ${amount.toFixed(2)} > ${maxSpend.toFixed(2)} (MAX_POSITION_SIZE)`));
             return false;
         }
         if (amount > this.balance) {
@@ -85,6 +91,16 @@ export class RiskTracker {
             return false;
         }
         return true;
+    }
+
+    hasPosition(marketId) {
+        if (!fs.existsSync(this.logPath)) return false;
+        try {
+            const trades = JSON.parse(fs.readFileSync(this.logPath, 'utf8'));
+            return trades.some(t => String(t.marketId) === String(marketId));
+        } catch (e) {
+            return false;
+        }
     }
 
     updateBalance(amount) {
