@@ -77,25 +77,25 @@
 
 <div class="stats-grid">
     <div class="stat-card">
-        <div class="stat-label">Доступно (Cash)</div>
+        <div class="stat-label">Available (Cash)</div>
         <div class="stat-value">{{stats.currentBalance}} USDC</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">В ставках (Invested)</div>
+        <div class="stat-label">Invested</div>
         <div class="stat-value" style="color: #cbd5e1">{{stats.invested}} USDC</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Общий Капитал</div>
+        <div class="stat-label">Total Equity</div>
         <div class="stat-value" style="color: #fbbf24">{{stats.equity}} USDC</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Профит/Лосс</div>
+        <div class="stat-label">Profit/Loss (PnL)</div>
         <div class="stat-value {{#if stats.isPositive}}price-pos{{else}}price-neg{{/if}}">{{stats.pnl}}</div>
     </div>
 </div>
 
 <div class="card">
-    <div class="card-header">Динамика Капитала (Equity)</div>
+    <div class="card-header">Equity Curve</div>
     <div style="height: 300px; padding: 1rem;">
         <canvas id="equityChart"></canvas>
     </div>
@@ -103,18 +103,18 @@
 
 <div class="card">
     <div class="card-header">
-        Последние сделки
-        <button class="refresh-btn" onclick="window.location.reload()">Обновить</button>
+        Recent Trades
+        <button class="refresh-btn" onclick="window.location.reload()">Refresh</button>
     </div>
     <table>
         <thead>
             <tr>
-                <th>Время</th>
-                <th>Рынок</th>
-                <th>Тип</th>
-                <th>Сумма</th>
-                <th>Цена</th>
-                <th>Режим</th>
+                <th>Time</th>
+                <th>Market</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Price</th>
+                <th>Mode</th>
             </tr>
         </thead>
         <tbody>
