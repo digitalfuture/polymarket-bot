@@ -1,46 +1,61 @@
 # Polymarket Discrepancy Trading Bot
 
-Этот бот ищет расхождения между ценами на Polymarket и реальными трендами (крипто-аналитика, экономический консенсус) и торгует по критерию >8% расхождения.
+![Polymarket Bot Dashboard](images/desktop.png)
 
-## Главная цель: ВЫЖИВАНИЕ
-Бот спроектирован с упором на сохранение капитала:
-- **Simulation Mode**: По умолчанию включен режим симуляции.
-- **Risk Management**: Не более 5-10% баланса на одну сделку.
-- **Stop-Loss**: При потере 50% начального баланса бот автоматически останавливается.
-- **Liquidity Filter**: Торгует только в ликвидных бинарных (Yes/No) рынках.
+This bot identifies discrepancies between Polymarket prices and real-world trends (crypto analytics, economic consensus) and executes trades when the divergence exceeds >15%.
 
-## Как это работает
-1. **Scanner**: Каждые 10 минут сканирует Polymarket на наличие активных рынков с высокой ликвидностью.
-2. **Trend Analyzer**:
-   - **Crypto**: Для рынков связанных с BTC, бот сравнивает текущую цену на Binance с целевой ценой в названии рынка и вычисляет вероятностный тренд.
-   - **Macro**: Использует заданные консенсус-прогнозы для макроэкономических событий (ставки ФРС и т.д.).
-   - **Extensibility**: Легко добавить новые источники (News API, Google Trends) в `src/services/analyzer.js`.
-3. **Trader**: Если расхождение > 8%, бот записывает сделку (в симуляции) или выставляет ордер (в LIVE режиме).
-4. **Logger**: Все сделки сохраняются в `src/data/trades.json`.
+## Core Goal: SURVIVAL
 
-## Как получить API ключи
-Для работы бота нужны 4 ключа: `POLY_PRIVATE_KEY`, `POLY_API_KEY`, `POLY_API_SECRET`, и `POLY_API_PASSPHRASE`.
+The bot is designed with a strong emphasis on capital preservation:
 
-1. **Private Key**: Зайдите в Polymarket -> Settings -> Account -> Export Private Key. Скопируйте его в файл `.env`.
-2. **Остальные ключи**: Запустите скрипт генерации:
-   ```bash
-   node src/generate-keys.js
-   ```
-   Скрипт создаст (или получит существующие) API ключи для вашего кошелька. Скопируйте их в `.env`.
+-   **Simulation Mode**: Enabled by default to test strategies risk-free.
+-   **Risk Management**: Strictly limits position size to 1.5% of the portfolio per trade.
+-   **Stop-Loss**: Automatically halts trading if the drawdown reaches 50% of the initial balance.
+-   **Liquidity Filter**: Only trades in highly liquid binary (Yes/No) markets to ensure execution.
 
-## Установка
-1. Установите зависимости: `npm install`
-2. Настройте `.env` (см. `.env.example`). 
-   - Если вы находитесь в регионе, где Polymarket ограничен (например, Индонезия), обязательно укажите `PROXY_URL=http://your-proxy:port`.
-3. Для запуска в режиме разработки: `npm run dev`
-4. Для запуска в продакшне: `npm start`
+## How It Works
 
-## Переход в LIVE режим
-Для реальной торговли:
-1. Установите `SIMULATION_MODE=false` в `.env`.
-2. Укажите ваши ключи Polymarket (Private Key, API Key, Secret, Passphrase).
-3. Убедитесь, что на кошельке есть USDC на Polygon.
+1.  **Scanner**: Scans Polymarket every 10 minutes for active, liquid markets.
+2.  **Trend Analyzer**:
+    *   **Crypto**: Compares live prices (via CoinGecko) against market targets to calculate probability trends.
+    *   **Macro**: Utilizes consensus forecasts for macroeconomic events (e.g., Fed rates).
+    *   **Extensiblity**: Easily add new data sources (News API, Google Trends) in `src/services/analyzer.js`.
+3.  **Trader**: If the discrepancy is > 15%, the bot either logs a virtual trade (Simulation) or places a real order (LIVE mode).
+4.  **Dashboard**: A local web interface (default port 3001) visualizes Equity, PnL, and active trades in real-time.
 
-## Важное предупреждение
-Торговля на предсказательных рынках сопряжена с высоким риском. Используйте бота только с теми средствами, которые готовы потерять. Бот предоставляется "как есть" для образовательных целей.
-# polymarket-bot
+## Setup & Installation
+
+1.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+2.  **Configure Environment**:
+    Copy `.env.example` to `.env` and configure your settings.
+    *   For simulation, no API keys are required.
+    *   If you are in a restricted region (e.g., Indonesia), the bot is configured to work without a VPN for market data (using CoinGecko and optimized headers).
+3.  **Run Development Mode**:
+    ```bash
+    npm run dev
+    ```
+    This starts the bot with hot-reloading enabled.
+4.  **Launch Dashboard**:
+    ```bash
+    npm run dashboard
+    ```
+    Open `http://localhost:3001` to view your performance.
+
+## Going LIVE
+
+To switch to real trading:
+
+1.  Set `SIMULATION_MODE=false` in `.env`.
+2.  Obtain your Polymarket API credentials:
+    *   Export your Private Key from Polymarket Settings.
+    *   Run `node src/generate-keys.js` (requires a proxy/VPN if in a restricted region) to get your API Key, Secret, and Passphrase.
+    *   Add these to your `.env` file.
+3.  Ensure your Polygon wallet has USDC.
+4.  Restart the bot.
+
+## Disclaimer
+
+Trading on prediction markets involves high risk. Use this bot only with funds you can afford to lose. This software is provided "as is" for educational purposes.
