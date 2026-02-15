@@ -11,9 +11,9 @@ export class RiskTracker {
         this.logPath = path.resolve('src/data/trades.json');
         this.csvPath = path.resolve('src/data/equity.csv');
         
-        if (this.simulationMode) {
-            this.clearStats();
-        }
+        // if (this.simulationMode) {
+        //     this.clearStats();
+        // }
         
         this.initLog();
     }
@@ -34,8 +34,8 @@ export class RiskTracker {
         if (!fs.existsSync(this.csvPath)) {
             fs.writeFileSync(this.csvPath, 'timestamp,balance,change,type\n');
             this.logToCsv(0, 'INITIAL');
-        } else if (!this.simulationMode) {
-            // In LIVE mode, recover balance from the last line of CSV
+        } else {
+            // Recover balance from the last line of CSV for both LIVE and SIM modes
             try {
                 const data = fs.readFileSync(this.csvPath, 'utf8').trim().split('\n');
                 if (data.length > 1) {
@@ -44,11 +44,11 @@ export class RiskTracker {
                     const savedBalance = parseFloat(parts[1]);
                     if (!isNaN(savedBalance)) {
                         this.balance = savedBalance;
-                        console.log(chalk.cyan(`Live mode: Recovered balance ${this.balance.toFixed(2)} USDC from history.`));
+                        console.log(chalk.cyan(`${this.simulationMode ? 'Simulation' : 'Live'} mode: Recovered balance ${this.balance.toFixed(2)} USDC from history.`));
                     }
                 }
             } catch (e) {
-                console.log(chalk.red("Failed to recover balance from history. Using initial balance."));
+                console.log(chalk.red("Failed to recover balance from history. Using default."));
             }
         }
     }
