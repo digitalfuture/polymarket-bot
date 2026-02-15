@@ -4,6 +4,7 @@ import cron from 'node-cron';
 import { MarketScanner } from './services/scanner.js';
 import { TrendAnalyzer } from './services/analyzer.js';
 import { RiskTracker } from './services/riskTracker.js';
+import { TradeResolver } from './services/resolver.js';
 // import { createPolymarketClient } from './services/polymarket.js';
 
 dotenv.config();
@@ -17,6 +18,7 @@ const risk = new RiskTracker(
     parseFloat(process.env.INITIAL_BALANCE || '100'),
     SIMULATION_MODE
 );
+const resolver = new TradeResolver(risk);
 let polyClient = null;
 
 async function runIteration() {
@@ -63,7 +65,8 @@ async function runIteration() {
                         amount: positionSize,
                         price: market.price,
                         trendProbability: result.trendProbability,
-                        simulation: true
+                        simulation: true,
+                        expiresAt: market.endDate
                     });
                 } else {
                     try {
@@ -91,7 +94,8 @@ async function runIteration() {
                             type: result.recommendation,
                             amount: positionSize,
                             orderId: order.orderID,
-                            simulation: false
+                            simulation: false,
+                            expiresAt: market.endDate
                         });
                     } catch (e) {
                         console.error(chalk.red(`Trade execution failed: ${e.message}`));
@@ -101,6 +105,9 @@ async function runIteration() {
         }
     }
     
+    // Resolve expired trades
+    await resolver.resolveClosedTrades();
+
     console.log(chalk.gray(`Iteration finished. Sleeping...`));
 }
 

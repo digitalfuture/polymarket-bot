@@ -9,7 +9,11 @@ const app = express();
 const PORT = process.env.DASHBOARD_PORT || 3001;
 
 // Config Handlebars
-app.engine('handlebars', engine());
+app.engine('handlebars', engine({
+    helpers: {
+        eq: (a, b) => a === b
+    }
+}));
 app.set('view engine', 'handlebars');
 app.set('views', path.resolve('src/views'));
 
@@ -42,7 +46,7 @@ const getStats = () => {
              cash = initialBalance; // This is a weak fallback, but better than negative infinity
         }
 
-        if (t.type && t.type.includes('BUY')) {
+        if (t.type && t.type.includes('BUY') && !t.resolved) {
             runningInvested += amount;
         }
         
@@ -50,7 +54,8 @@ const getStats = () => {
             x: t.timestamp,
             y: (cash + runningInvested).toFixed(2),
             cash: cash.toFixed(2),
-            invested: runningInvested.toFixed(2)
+            invested: runningInvested.toFixed(2),
+            result: t.result || null
         };
     });
 
@@ -66,11 +71,24 @@ const getStats = () => {
     }
 
     return {
-        trades: trades.reverse().slice(0, 50).map(t => ({
-            ...t,
-            time: new Date(t.timestamp).toLocaleString(),
-            isBuyYes: t.type === 'BUY_YES'
-        })),
+        trades: trades.reverse().slice(0, 50).map(t => {
+            const expDate = t.expiresAt ? new Date(t.expiresAt) : null;
+            let remaining = '';
+            if (expDate) {
+                const diff = expDate - new Date();
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                remaining = diff > 0 ? `${hours}h ${mins}m` : 'Closed';
+            }
+
+            return {
+                ...t,
+                time: new Date(t.timestamp).toLocaleString(),
+                expires: expDate ? expDate.toLocaleString() : 'N/A',
+                remaining: remaining,
+                isBuyYes: t.type === 'BUY_YES'
+            };
+        }),
         stats: {
             currentBalance: currentCash.toFixed(2),
             invested: totalInvested.toFixed(2),

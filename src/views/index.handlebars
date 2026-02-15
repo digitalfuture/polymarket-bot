@@ -47,6 +47,8 @@
             <tr>
                 <th>Time</th>
                 <th>Market</th>
+                <th>Ends in</th>
+                <th>Status</th>
                 <th>Type</th>
                 <th>Amount</th>
                 <th>Price</th>
@@ -58,6 +60,16 @@
             <tr>
                 <td style="color: var(--text-muted)">{{this.time}}</td>
                 <td style="font-weight: 600">{{this.title}}</td>
+                <td style="color: var(--accent); font-weight: 600;">{{this.remaining}}</td>
+                <td>
+                    {{#if this.result}}
+                        <span class="badge {{#if (eq this.result 'WIN')}}price-pos{{else}}price-neg{{/if}}" style="background: rgba(0,0,0,0.2)">
+                            {{this.result}}
+                        </span>
+                    {{else}}
+                        <span class="badge" style="background: rgba(255,255,255,0.1)">OPEN</span>
+                    {{/if}}
+                </td>
                 <td>
                     <span class="{{#if this.isBuyYes}}price-pos{{else}}price-neg{{/if}}">
                         {{this.type}}
