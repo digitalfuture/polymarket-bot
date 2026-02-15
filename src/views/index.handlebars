@@ -28,6 +28,10 @@
         <div class="stat-label">Profit/Loss (PnL)</div>
         <div class="stat-value {{#if stats.isPositive}}price-pos{{else}}price-neg{{/if}}">{{stats.pnl}}</div>
     </div>
+    <div class="stat-card">
+        <div class="stat-label">Activity (Open / Closed)</div>
+        <div class="stat-value" style="color: #60a5fa">{{stats.openTrades}} / {{stats.closedTrades}}</div>
+    </div>
 </div>
 
 <div class="card">

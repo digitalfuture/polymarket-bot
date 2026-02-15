@@ -70,10 +70,10 @@ const getStats = () => {
     const openTrades = trades.filter(t => !t.resolved).length;
     const closedTrades = trades.filter(t => t.resolved).length;
     
-    let pnlDisplay = (pnlValue >= 0 ? "+" : "") + pnlValue.toFixed(2) + " USDC (" + pnlPercent + "%) | Open: " + openTrades + " | Closed: " + closedTrades;
+    let pnlDisplay = (pnlValue >= 0 ? "+" : "") + pnlValue.toFixed(2) + " USDC (" + pnlPercent + "%)";
     
     if (pnlPercent === "0.00" && totalInvested > 0) {
-        pnlDisplay = "0.00% (All Open) | Open: " + openTrades + " | Closed: " + closedTrades;
+        pnlDisplay = "0.00% (All Open)";
     }
 
     return {
