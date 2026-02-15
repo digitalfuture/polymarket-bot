@@ -34,18 +34,18 @@ const getStats = () => {
     // Calculate Equity History
     let runningInvested = 0;
     
-    const history = trades.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).map(t => {
+    // Sort trades by timestamp to process history chronologically
+    const sortedTrades = [...trades].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+    const history = sortedTrades.map(t => {
         const amount = parseFloat(t.amount || 0);
-        
-        // If we have the saved post-trade balance, use it. Otherwise fallback to calc.
         let cash = parseFloat(t.currentBalance);
+        
         if (isNaN(cash)) {
-             // Fallback logic if currentBalance wasn't saved (older version)
-             // We can't easily recover exact state without full replay, 
-             // so we might see artifacts. But for new trades it will work.
-             cash = initialBalance; // This is a weak fallback, but better than negative infinity
+             cash = initialBalance;
         }
 
+        // Only add to invested if the position is still open
         if (t.type && t.type.includes('BUY') && !t.resolved) {
             runningInvested += amount;
         }
@@ -60,14 +60,20 @@ const getStats = () => {
     });
 
     const lastPoint = history.length > 0 ? history[history.length - 1] : { cash: initialBalance, invested: 0, y: initialBalance };
-    const currentCash = parseFloat(lastPoint.cash !== undefined ? lastPoint.cash : initialBalance);
-    const totalInvested = parseFloat(lastPoint.invested !== undefined ? lastPoint.invested : 0);
+    const currentCash = parseFloat(lastPoint.cash);
+    const totalInvested = parseFloat(lastPoint.invested);
     const totalEquity = currentCash + totalInvested;
     
-    let pnl = ((totalEquity - initialBalance) / initialBalance * 100).toFixed(2);
-    let pnlDisplay = pnl + "%";
-    if (pnl === "0.00" && totalInvested > 0) {
-        pnlDisplay = "0.00% (All Open)";
+    const pnlValue = totalEquity - initialBalance;
+    const pnlPercent = (pnlValue / initialBalance * 100).toFixed(2);
+    
+    const openTrades = trades.filter(t => !t.resolved).length;
+    const closedTrades = trades.filter(t => t.resolved).length;
+    
+    let pnlDisplay = (pnlValue >= 0 ? "+" : "") + pnlValue.toFixed(2) + " USDC (" + pnlPercent + "%) | Open: " + openTrades + " | Closed: " + closedTrades;
+    
+    if (pnlPercent === "0.00" && totalInvested > 0) {
+        pnlDisplay = "0.00% (All Open) | Open: " + openTrades + " | Closed: " + closedTrades;
     }
 
     return {
@@ -94,7 +100,9 @@ const getStats = () => {
             invested: totalInvested.toFixed(2),
             equity: totalEquity.toFixed(2),
             pnl: pnlDisplay,
-            isPositive: parseFloat(pnl) >= 0,
+            openTrades,
+            closedTrades,
+            isPositive: pnlValue >= 0,
             totalTrades: trades.length,
             avgTrade: trades.length > 0 ? (trades.reduce((sum, t) => sum + (t.amount || 0), 0) / trades.length).toFixed(2) : "0.00"
         },
