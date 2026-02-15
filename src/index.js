@@ -23,6 +23,7 @@ let polyClient = null;
 
 async function runIteration() {
     console.log(chalk.bold.magenta(`\n--- Iteration Started: ${new Date().toLocaleString()} ---`));
+    risk.saveHeartbeat();
     
     if (!SIMULATION_MODE && !polyClient) {
         try {

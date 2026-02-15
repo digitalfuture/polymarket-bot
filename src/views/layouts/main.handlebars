@@ -147,8 +147,13 @@
     <div class="container">
         <header>
             <div class="logo">Polymarket Dashboard</div>
-            <div class="status">
-                <span style="color: var(--success)">●</span> Bot Active
+            <div class="status" style="text-align: right;">
+                <div style="font-size: 14px; font-weight: 600;">
+                    <span style="color: var(--success)">●</span> Bot Active
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                    Last Scan: {{stats.lastScan}}
+                </div>
             </div>
         </header>
 

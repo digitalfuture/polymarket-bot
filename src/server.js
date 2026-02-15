@@ -76,6 +76,16 @@ const getStats = () => {
         pnlDisplay = "0.00% (All Open)";
     }
 
+    const heartbeatPath = path.resolve('src/data/heartbeat.json');
+    let lastScanInfo = "Never";
+    if (fs.existsSync(heartbeatPath)) {
+        try {
+            const hb = JSON.parse(fs.readFileSync(heartbeatPath, 'utf8'));
+            const diff = Math.floor((new Date() - new Date(hb.lastScan)) / 1000 / 60);
+            lastScanInfo = diff === 0 ? "Just now" : `${diff} min ago`;
+        } catch (e) {}
+    }
+
     return {
         trades: trades.reverse().slice(0, 50).map(t => {
             const expDate = t.expiresAt ? new Date(t.expiresAt) : null;
@@ -102,6 +112,7 @@ const getStats = () => {
             pnl: pnlDisplay,
             openTrades,
             closedTrades,
+            lastScan: lastScanInfo,
             isPositive: pnlValue >= 0,
             totalTrades: trades.length,
             avgTrade: trades.length > 0 ? (trades.reduce((sum, t) => sum + (t.amount || 0), 0) / trades.length).toFixed(2) : "0.00"

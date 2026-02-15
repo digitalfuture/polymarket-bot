@@ -113,4 +113,15 @@ export class RiskTracker {
             process.exit(1);
         }
     }
+
+    saveHeartbeat() {
+        const heartbeatPath = path.resolve('src/data/heartbeat.json');
+        try {
+            fs.writeFileSync(heartbeatPath, JSON.stringify({
+                lastScan: new Date().toISOString()
+            }, null, 2));
+        } catch (e) {
+            console.error("Failed to save heartbeat:", e.message);
+        }
+    }
 }
