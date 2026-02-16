@@ -103,13 +103,29 @@ export class RiskTracker {
         }
     }
 
+    getEquity() {
+        let invested = 0;
+        try {
+            if (fs.existsSync(this.logPath)) {
+                const trades = JSON.parse(fs.readFileSync(this.logPath, 'utf8'));
+                invested = trades
+                    .filter(t => !t.resolved)
+                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+            }
+        } catch (e) {
+            console.error("Error calculating equity:", e.message);
+        }
+        return this.balance + invested;
+    }
+
     updateBalance(amount) {
         this.balance += amount;
         console.log(chalk.green(`New Balance: ${this.balance.toFixed(2)} USDC`));
         this.logToCsv(amount, 'ADJUSTMENT');
         
-        if (this.balance < this.initialBalance * 0.5) {
-            console.log(chalk.bgRed("CRITICAL: 50% loss detected. Stopping all activity."));
+        const equity = this.getEquity();
+        if (equity < this.initialBalance * 0.5) {
+            console.log(chalk.bgRed(`CRITICAL: 50% loss detected (Equity: ${equity.toFixed(2)}). Stopping all activity.`));
             process.exit(1);
         }
     }

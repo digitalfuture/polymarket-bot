@@ -49,6 +49,7 @@
     <table>
         <thead>
             <tr>
+                <th>#</th>
                 <th>Time</th>
                 <th>Market</th>
                 <th>Ends in</th>
@@ -62,6 +63,7 @@
         <tbody>
             {{#each trades}}
             <tr>
+                <td style="color: var(--text-muted); font-size: 0.8rem;">{{@index}}</td>
                 <td style="color: var(--text-muted)">{{this.time}}</td>
                 <td style="font-weight: 600">{{this.title}}</td>
                 <td style="color: var(--accent); font-weight: 600;">{{this.remaining}}</td>
@@ -71,7 +73,11 @@
                             {{this.result}}
                         </span>
                     {{else}}
-                        <span class="badge" style="background: rgba(255,255,255,0.1)">OPEN</span>
+                        {{#if (eq this.remaining 'Closed')}}
+                            <span class="badge" style="background: #ef4444; color: white;">PENDING</span>
+                        {{else}}
+                            <span class="badge" style="background: rgba(255,255,255,0.1)">OPEN</span>
+                        {{/if}}
                     {{/if}}
                 </td>
                 <td>
@@ -79,7 +85,7 @@
                         {{this.type}}
                     </span>
                 </td>
-                <td>{{this.amount}} USDC</td>
+                <td style="font-family: monospace; font-weight: bold;">{{this.amount}}</td>
                 <td>{{this.price}}</td>
                 <td>
                     <span class="badge {{#if this.simulation}}badge-sim{{else}}badge-live{{/if}}">
