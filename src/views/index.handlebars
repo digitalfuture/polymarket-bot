@@ -63,7 +63,7 @@
         <tbody>
             {{#each trades}}
             <tr>
-                <td style="color: var(--text-muted); font-size: 0.8rem;">{{@index}}</td>
+                <td style="color: var(--text-muted); font-size: 0.8rem;">{{add @index 1}}</td>
                 <td style="color: var(--text-muted)">{{this.time}}</td>
                 <td style="font-weight: 600">{{this.title}}</td>
                 <td style="color: var(--accent); font-weight: 600;">{{this.remaining}}</td>

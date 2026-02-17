@@ -11,7 +11,8 @@ const PORT = process.env.DASHBOARD_PORT || 3001;
 // Config Handlebars
 app.engine('handlebars', engine({
     helpers: {
-        eq: (a, b) => a === b
+        eq: (a, b) => a === b,
+        add: (a, b) => a + b
     }
 }));
 app.set('view engine', 'handlebars');
@@ -70,10 +71,10 @@ const getStats = () => {
     const openTrades = trades.filter(t => !t.resolved).length;
     const closedTrades = trades.filter(t => t.resolved).length;
     
-    let pnlDisplay = (pnlValue >= 0 ? "+" : "") + pnlValue.toFixed(2) + " USDC (" + pnlPercent + "%)";
+    let pnlDisplay = (pnlValue >= 0 ? "+" : "") + pnlValue.toFixed(2) + " USDC";
     
     if (pnlPercent === "0.00" && totalInvested > 0) {
-        pnlDisplay = "0.00% (All Open)";
+        pnlDisplay = "0.00 (All Open)";
     }
 
     const heartbeatPath = path.resolve('src/data/heartbeat.json');
