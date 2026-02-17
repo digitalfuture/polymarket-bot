@@ -10,10 +10,8 @@ export class RiskTracker {
         this.positions = [];
         this.logPath = path.resolve('src/data/trades.json');
         this.csvPath = path.resolve('src/data/equity.csv');
-        
-        // if (this.simulationMode) {
-        //     this.clearStats();
-        // }
+        this.dailyLossLimit = 5; // Max 5 USDC loss per day
+        this.maxOpenTrades = 10; // Never more than 10 open positions
         
         this.initLog();
     }
@@ -79,8 +77,22 @@ export class RiskTracker {
             return false;
         }
 
-        // 2. "Survival" check: Never spend more than configured % of remaining balance (default 10%)
-        const maxPct = parseFloat(process.env.MAX_POSITION_SIZE || '0.1');
+        // 2. Check open trades limit
+        const openCount = this.getOpenTradesCount();
+        if (openCount >= this.maxOpenTrades) {
+            console.log(chalk.yellow(`  ⚠️ Max open trades reached (${openCount}/${this.maxOpenTrades}). Waiting for resolutions.`));
+            return false;
+        }
+
+        // 3. Check daily loss limit
+        const dailyLoss = this.getDailyLoss();
+        if (dailyLoss >= this.dailyLossLimit) {
+            console.log(chalk.red(`  🛑 Daily loss limit reached (${dailyLoss.toFixed(2)}/${this.dailyLossLimit} USDC). No more trades today.`));
+            return false;
+        }
+
+        // 4. "Survival" check: Never spend more than configured % of remaining balance
+        const maxPct = parseFloat(process.env.MAX_POSITION_SIZE || '0.01');
         const maxSpend = this.balance * maxPct;
         if (amount > maxSpend) {
             console.log(chalk.red(`Trade risk too high: ${amount.toFixed(2)} > ${maxSpend.toFixed(2)} (MAX_POSITION_SIZE)`));
@@ -118,14 +130,37 @@ export class RiskTracker {
         return this.balance + invested;
     }
 
+    getOpenTradesCount() {
+        try {
+            if (fs.existsSync(this.logPath)) {
+                const trades = JSON.parse(fs.readFileSync(this.logPath, 'utf8'));
+                return trades.filter(t => !t.resolved).length;
+            }
+        } catch (e) {}
+        return 0;
+    }
+
+    getDailyLoss() {
+        try {
+            if (fs.existsSync(this.logPath)) {
+                const trades = JSON.parse(fs.readFileSync(this.logPath, 'utf8'));
+                const today = new Date().toISOString().split('T')[0];
+                return trades
+                    .filter(t => t.resolved && t.result === 'LOSS' && t.timestamp.startsWith(today))
+                    .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+            }
+        } catch (e) {}
+        return 0;
+    }
+
     updateBalance(amount) {
         this.balance += amount;
         console.log(chalk.green(`New Balance: ${this.balance.toFixed(2)} USDC`));
         this.logToCsv(amount, 'ADJUSTMENT');
         
         const equity = this.getEquity();
-        if (equity < this.initialBalance * 0.5) {
-            console.log(chalk.bgRed(`CRITICAL: 50% loss detected (Equity: ${equity.toFixed(2)}). Stopping all activity.`));
+        if (equity < this.initialBalance * 0.70) {
+            console.log(chalk.bgRed(`CRITICAL: 30% loss detected (Equity: ${equity.toFixed(2)}). Stopping all activity.`));
             process.exit(1);
         }
     }
